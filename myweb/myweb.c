@@ -23,6 +23,10 @@ struct http_req {
 };
 
 int fill_req(char *buf, struct http_req *req) {
+	static int counter = -1;
+	++counter;
+	fprintf(stderr, "%i %s\n",counter, buf);
+
 	if (strlen(buf) == 2) {
 		// пустая строка (\r\n) означает конец запроса
 		return REQ_END;
@@ -57,7 +61,7 @@ int fill_req(char *buf, struct http_req *req) {
 }
 
 int log_req(struct http_req *req) {
-	// fprintf(stderr, "%s %s\n%s\n", req->request, req->method, req->uri);
+	fprintf(stderr, "%s %s\n%s\n", req->request, req->method, req->uri);
 	return 0;
 }
 

@@ -3,7 +3,7 @@ service http
        socket_type             = stream
        wait                    = no
        user                    = root
-       server                  = /usr/local/bin/myweb 
+       server                  = /usr/local/bin/scr-wrap 
        server_args	       = arg1
 }
 
