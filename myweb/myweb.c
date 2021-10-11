@@ -22,10 +22,33 @@ struct http_req {
 	// accept
 };
 
-int fill_req(char *buf, struct http_req *req) {
-	static int counter = -1;
+int fill_req2(char *buf, struct http_req *req)
+{
+	static int counter = 0;
 	++counter;
 	fprintf(stderr, "%i %s\n",counter, buf);
+	
+	char sep[10] = " ";
+	char* items = strtok(buf,sep);
+	
+	//get head of line
+	char head[strlen(items)];
+	strncpy(head, items, strlen(items));
+	fprintf(stderr, "HEAD  %s\n",head);
+	items = strtok (NULL,sep);
+	
+	while(items != NULL)
+	{	
+		
+		fprintf(stderr, "params:  %s\n",items);	
+      		items = strtok (NULL,sep);
+	}
+
+}
+
+int fill_req(char *buf, struct http_req *req) {
+	
+	fill_req2(buf, req);
 
 	if (strlen(buf) == 2) {
 		// пустая строка (\r\n) означает конец запроса
