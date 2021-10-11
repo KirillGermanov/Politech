@@ -22,11 +22,23 @@ struct http_req {
 	// accept
 };
 
+int processGet(char *items, char* sep, struct http_req *req)
+{
+	while(items != NULL)
+	{	
+		
+		fprintf(stderr, "params:%i  %s\n",strlen(items), items);	
+      		items = strtok (NULL,sep);
+	}
+
+	return 0;
+}
+
 int fill_req2(char *buf, struct http_req *req)
 {
 	static int counter = 0;
 	++counter;
-	fprintf(stderr, "%i %s\n",counter, buf);
+	fprintf(stderr, "Process Line %i:len =%i  %s\n",counter,strlen(buf),  buf);
 	
 	char sep[10] = " ";
 	char* items = strtok(buf,sep);
@@ -34,15 +46,15 @@ int fill_req2(char *buf, struct http_req *req)
 	//get head of line
 	char head[strlen(items)];
 	strncpy(head, items, strlen(items));
-	fprintf(stderr, "HEAD  %s\n",head);
+	
 	items = strtok (NULL,sep);
 	
-	while(items != NULL)
-	{	
-		
-		fprintf(stderr, "params:  %s\n",items);	
-      		items = strtok (NULL,sep);
+	if(! strncmp(head,"GET",3)){
+		fprintf(stderr, " it is Get \n");
+		processGet(items, sep, req);	
 	}
+
+	
 
 }
 
