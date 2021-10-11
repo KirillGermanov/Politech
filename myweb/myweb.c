@@ -10,6 +10,12 @@
 #define ERR_NO_URI -100
 #define ERR_ENDLESS_URI -101
 
+enum GetStates{	GET_URI,
+		GET_URI_PATH,
+		GET_URI_PARAMS,
+		GET_VERSION
+};
+
 struct http_req {
 	char request[HTTP_REQUEST_LEN];
 	char method[HTTP_METHOD_LEN];
@@ -24,50 +30,76 @@ struct http_req {
 
 int processGet(char *items, char* sep, struct http_req *req)
 {
+	int state = GET_URI;
+
 	while(items != NULL)
 	{	
-		
-		fprintf(stderr, "params:%i  %s\n",strlen(items), items);	
+		switch(state){
+			case GET_URI:strncpy(req->uri, items, strlen(items));
+				fprintf(stderr, "URI: %s\n",items);
+				state = GET_VERSION;
+				break;
+			case GET_VERSION: fprintf(stderr, "VERSION: %s\n",items);
+		 		break;
+
+		}
+			
       		items = strtok (NULL,sep);
 	}
 
 	return 0;
 }
 
-int fill_req2(char *buf, struct http_req *req)
+void fill_req2(char *buf, struct http_req *req)
 {
 	static int counter = 0;
 	++counter;
 	fprintf(stderr, "Process Line %i:len =%i  %s\n",counter,strlen(buf),  buf);
 	
+	char tmp[strlen(buf)];
+	strncpy(tmp, buf, strlen(buf));
+
 	char sep[10] = " ";
 	char* items = strtok(buf,sep);
 	
 	//get head of line
 	char head[strlen(items)];
 	strncpy(head, items, strlen(items));
-	
 	items = strtok (NULL,sep);
-	
-	if(! strncmp(head,"GET",3)){
-		fprintf(stderr, " it is Get \n");
-		processGet(items, sep, req);	
-	}
 
+	fprintf(stderr, "HEAD: %s\n",head);
+
+	if(!strncmp(head,"GET",3)){
+		strncpy(req->request, tmp, strlen(tmp));
+		strncpy(req->method, "GET", strlen("GET"));
+		
+		processGet(items, sep, req);	
+	} else if(!strncmp(head,"Host:",5)){
+		char server[strlen(items)];
+		strncpy(server, items, strlen(items));
+		fprintf(stderr, "Server: %s\n", server);	
+	} else {
 	
+		while(items != NULL)
+        	{
+               		fprintf(stderr, "params:%i  %s\n",strlen(items), items);
+              	 	items = strtok (NULL,sep);
+        	}
+	}
 
 }
 
 int fill_req(char *buf, struct http_req *req) {
 	
-	fill_req2(buf, req);
-
 	if (strlen(buf) == 2) {
 		// пустая строка (\r\n) означает конец запроса
 		return REQ_END;
 	}
-	char *p, *a, *b;
-	// Это строка GET-запроса
+	
+	fill_req2(buf, req);
+
+	
+	/*
 	p = strstr(buf, "GET");
 	if (p == buf) {
 		// Строка запроса должна быть вида
@@ -91,6 +123,7 @@ int fill_req(char *buf, struct http_req *req) {
 			// тогда это что-то не то
 		}
 	}
+	*/
 
 	return 0;	
 }
@@ -124,6 +157,6 @@ int main (void) {
 			printf("Error: %d\n", ret);
 		
 	}
-	log_req(&req);
+	//log_req(&req);
 	make_resp(&req);
 }
