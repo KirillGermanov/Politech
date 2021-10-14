@@ -20,9 +20,9 @@ struct http_req {
 	char request[HTTP_REQUEST_LEN];
 	char method[HTTP_METHOD_LEN];
 	char uri[HTTP_URI_LEN];
-	char uri_path[255];
-	char uri_params[255];
-	// version
+	char uri_path[HTTP_URI_LEN];
+	char uri_params[HTTP_URI_LEN];
+	char version[100]
 	// user_agent
 	char server[255];
 	// accept
