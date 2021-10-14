@@ -20,11 +20,11 @@ struct http_req {
 	char request[HTTP_REQUEST_LEN];
 	char method[HTTP_METHOD_LEN];
 	char uri[HTTP_URI_LEN];
-	// uri_path
-	// uri_params
+	char uri_path[255];
+	char uri_params[255];
 	// version
 	// user_agent
-	// server
+	char server[255];
 	// accept
 };
 
@@ -35,10 +35,23 @@ int processGet(char *items, char* sep, struct http_req *req)
 	while(items != NULL)
 	{	
 		switch(state){
-			case GET_URI:strncpy(req->uri, items, strlen(items));
-				fprintf(stderr, "URI: %s\n",items);
-				state = GET_VERSION;
-				break;
+			case GET_URI: state = GET_VERSION;
+				char* pos = strchr(items, '/');
+				if ( pos != NULL) {
+					fprintf(stderr, "URI: %s\n",items);
+					strncpy(req->uri, items, strlen(items));
+					pos = strchr(items, '?');
+					if(pos != NULL)
+					{
+						strncpy(req->uri_path, items, pos-items);
+						fprintf(stderr, "URI_PATH: %s\n",req->uri_path);
+						pos++;
+						strncpy(req->uri_params, pos, &items[strlen(items)] - pos );
+						fprintf(stderr, "URI_PARAMS: %s\n",req->uri_params);
+					}
+
+					break;
+				}
 			case GET_VERSION: fprintf(stderr, "VERSION: %s\n",items);
 		 		break;
 
@@ -64,7 +77,7 @@ void fill_req2(char *buf, struct http_req *req)
 	
 	//get head of line
 	char head[strlen(items)];
-	strncpy(head, items, strlen(items));
+	strncpy(head, items, strlen(items)+1);
 	items = strtok (NULL,sep);
 
 	fprintf(stderr, "HEAD: %s\n",head);
