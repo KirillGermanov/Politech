@@ -43,10 +43,10 @@ int processGet(char *items, char* sep, struct http_req *req)
 					pos = strchr(items, '?');
 					if(pos != NULL)
 					{
-						strncpy(req->uri_path, items, pos-items);
+						strncpy(req->uri_path, items, pos-items+1);
 						fprintf(stderr, "URI_PATH: %s\n",req->uri_path);
 						pos++;
-						strncpy(req->uri_params, pos, &items[strlen(items)] - pos );
+						strncpy(req->uri_params, pos, &items[strlen(items)] - pos+1 );
 						fprintf(stderr, "URI_PARAMS: %s\n",req->uri_params);
 					}
 
@@ -88,9 +88,8 @@ void fill_req2(char *buf, struct http_req *req)
 		
 		processGet(items, sep, req);	
 	} else if(!strncmp(head,"Host:",5)){
-		char server[strlen(items)];
-		strncpy(server, items, strlen(items));
-		fprintf(stderr, "Server: %s\n", server);	
+		strncpy(req->server, items, strlen(items));
+		fprintf(stderr, "Server: %s\n", req->server);	
 	} else {
 	
 		while(items != NULL)
