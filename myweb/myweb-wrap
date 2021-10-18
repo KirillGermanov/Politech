@@ -1,4 +1,4 @@
 #!/bin/sh
 
-/usr/local/bin/myweb 2> /home/sysadmin/Kirill/box/unix-dev-sys/myweb/logs.txt 
+/usr/local/bin/myweb $1 $2 2> /home/sysadmin/Kirill/box/unix-dev-sys/myweb/logs.txt 
 
