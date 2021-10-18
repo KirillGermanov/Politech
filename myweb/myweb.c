@@ -63,7 +63,7 @@ int processGet(char *items, char* sep, struct http_req *req)
 	return 0;
 }
 
-void fill_req2(char *buf, struct http_req *req)
+void processReq(char *buf, struct http_req *req)
 {
 	static int counter = 0;
 	++counter;
@@ -82,15 +82,15 @@ void fill_req2(char *buf, struct http_req *req)
 
 	fprintf(stderr, "HEAD: %s\n",head);
 
-	if(!strncmp(head,"GET",3)){
+	if(!strncmp(head,"GET",3)){				//GET line	
 		strncpy(req->request, tmp, strlen(tmp));
 		strncpy(req->method, "GET", strlen("GET"));
 		
-		processGet(items, sep, req);	
-	} else if(!strncmp(head,"Host:",5)){
+		processGet(items, sep, req);		
+	} else if(!strncmp(head,"Host:",5)){			//HOST line
 		strncpy(req->server, items, strlen(items));
 		fprintf(stderr, "Server: %s\n", req->server);	
-	} else {
+	} else {						//other lines
 	
 		while(items != NULL)
         	{
@@ -108,9 +108,9 @@ int fill_req(char *buf, struct http_req *req) {
 		return REQ_END;
 	}
 	
-	fill_req2(buf, req);
-
-	
+	processReq(buf, req);
+	return 0;
+}	
 	/*
 	p = strstr(buf, "GET");
 	if (p == buf) {
@@ -137,8 +137,7 @@ int fill_req(char *buf, struct http_req *req) {
 	}
 	*/
 
-	return 0;	
-}
+	
 
 int log_req(struct http_req *req) {
 	fprintf(stderr, "%s %s\n%s\n", req->request, req->method, req->uri);
@@ -169,6 +168,5 @@ int main (void) {
 			printf("Error: %d\n", ret);
 		
 	}
-	//log_req(&req);
 	make_resp(&req);
 }
