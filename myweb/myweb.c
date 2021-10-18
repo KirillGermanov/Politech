@@ -5,6 +5,8 @@
 #define HTTP_REQUEST_LEN 256
 #define HTTP_METHOD_LEN 6
 #define HTTP_URI_LEN 100
+#define FILE_NAME_LEN 1000
+#define LOG_ENTRY_LEN 1000
 
 #define REQ_END 100
 #define ERR_NO_URI -100
@@ -49,9 +51,15 @@ int processGet(char *items, char* sep, struct http_req *req)
 						strncpy(req->uri_params, pos, &items[strlen(items)] - pos+1 );
 						fprintf(stderr, "URI_PARAMS: %s\n",req->uri_params);
 					}
+					else
+					{
+						return ERR_ENDLESS_URI;
+					}
 
 					break;
 				}
+				return ERR_NO_URI;
+
 			case GET_VERSION: fprintf(stderr, "VERSION: %s\n",items);
 		 		break;
 
@@ -63,7 +71,7 @@ int processGet(char *items, char* sep, struct http_req *req)
 	return 0;
 }
 
-void processReq(char *buf, struct http_req *req)
+int processReq(char *buf, struct http_req *req)
 {
 	static int counter = 0;
 	++counter;
@@ -86,7 +94,7 @@ void processReq(char *buf, struct http_req *req)
 		strncpy(req->request, tmp, strlen(tmp));
 		strncpy(req->method, "GET", strlen("GET"));
 		
-		processGet(items, sep, req);		
+		return processGet(items, sep, req);		
 	} else if(!strncmp(head,"Host:",5)){			//HOST line
 		strncpy(req->server, items, strlen(items));
 		fprintf(stderr, "Server: %s\n", req->server);	
@@ -99,6 +107,8 @@ void processReq(char *buf, struct http_req *req)
         	}
 	}
 
+	return 0;
+
 }
 
 int fill_req(char *buf, struct http_req *req) {
@@ -108,35 +118,8 @@ int fill_req(char *buf, struct http_req *req) {
 		return REQ_END;
 	}
 	
-	processReq(buf, req);
-	return 0;
+	return processReq(buf, req);
 }	
-	/*
-	p = strstr(buf, "GET");
-	if (p == buf) {
-		// Строка запроса должна быть вида
-		// GET /dir/ HTTP/1.0
-		// GET /dir HTTP/1.1
-		// GET /test123?r=123 HTTP/1.1
-		// и т.п.
-		strncpy(req->request, buf, strlen(buf));
-		strncpy(req->method, "GET", strlen("GET"));
-		a = strchr(buf, '/');
-		if ( a != NULL) { // есть запрашиваемый URI 
-			b = strchr(a, ' ');
-			if ( b != NULL ) { // конец URI
-				strncpy(req->uri, a, b-a);
-			} else {
-				return ERR_ENDLESS_URI;  
-				// тогда это что-то не то
-			}
-		} else {
-			return ERR_NO_URI; 
-			// тогда это что-то не то
-		}
-	}
-	*/
-
 	
 
 int log_req(struct http_req *req) {
@@ -152,7 +135,19 @@ int make_resp(struct http_req *req) {
 	return 0;
 }
 
-int main (void) {
+int main (int argc, char* argv[]) {
+	
+	char base_path[FILE_NAME_LEN] = "";
+	char log_path[FILE_NAME_LEN] = "";
+	char const *log_file = "access.log";
+	if ( argc > 2 ) { // задан каталог журнализации
+		strncpy(base_path, argv[1], strlen(argv[1]));
+		strncpy(log_path, argv[2], strlen(argv[2]));
+		strcat(log_path,"/");
+		strcat(base_path,"/");
+	}
+	strcat(log_path,log_file);
+	
 	char buf[HTTP_HEADER_LEN];
 	struct http_req req;
 	while(fgets(buf, sizeof(buf),stdin)) {

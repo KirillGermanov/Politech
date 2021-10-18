@@ -19,7 +19,7 @@ install:
 	install $(TARGET) $(PREFIX)/bin
 	install $(TARGET)-wrap $(PREFIX)/bin
 	[ -d $(WEBROOT) ] || mkdir $(WEBROOT)
-#	install webroot/ $(WEBROOT)
+	install webroot/* $(WEBROOT)
 	install $(TARGET)-xinetd $(XINETD)
 	[ -d $(LOGDIR) ] || mkdir $(LOGDIR)
 
