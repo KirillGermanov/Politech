@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/mman.h>
 
 #define HTTP_HEADER_LEN 256
 #define HTTP_REQUEST_LEN 256
@@ -127,7 +132,10 @@ int log_req(struct http_req *req) {
 	return 0;
 }
 
-int make_resp(struct http_req *req) {
+int make_resp(struct http_req *req, char* base_path) {
+	
+
+
 	printf("HTTP/1.1 200 OK\r\n");
 	printf("Content-Type: text/html\r\n");
 	printf("\r\n");
@@ -144,8 +152,13 @@ int main (int argc, char* argv[]) {
 		strncpy(base_path, argv[1], strlen(argv[1]));
 		strncpy(log_path, argv[2], strlen(argv[2]));
 		strcat(log_path,"/");
-		strcat(base_path,"/");
+		//strcat(base_path,"/"); we have it in uri_path
 	}
+	else
+	{
+		strcat(base_path,"webroo");
+	}
+
 	strcat(log_path,log_file);
 	
 	char buf[HTTP_HEADER_LEN];
@@ -163,5 +176,5 @@ int main (int argc, char* argv[]) {
 			printf("Error: %d\n", ret);
 		
 	}
-	make_resp(&req);
+	make_resp(&req, base_path);
 }
