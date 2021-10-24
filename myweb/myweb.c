@@ -50,22 +50,25 @@ int processGet(char *items, char* sep, struct http_req *req)
 					pos = strchr(items, '?');
 					if(pos != NULL)
 					{
-						strncpy(req->uri_path, items, pos-items+1);
+						strncpy(req->uri_path, items, pos-items);
+						strcat(req->uri_path,"\0");
 						fprintf(stderr, "URI_PATH: %s\n",req->uri_path);
 						pos++;
 						strncpy(req->uri_params, pos, &items[strlen(items)] - pos+1 );
 						fprintf(stderr, "URI_PARAMS: %s\n",req->uri_params);
-					}
-					else
-					{
-						return ERR_ENDLESS_URI;
+					} else {
+						if(strlen(req->uri)<2)
+							strcpy(req->uri_path, "/root.html");
+						else
+							strncpy(req->uri_path, req->uri, strlen(req->uri));	
 					}
 
 					break;
 				}
 				return ERR_NO_URI;
 
-			case GET_VERSION: fprintf(stderr, "VERSION: %s\n",items);
+			case GET_VERSION: strncpy(req->version,items,strlen(items)); 
+				fprintf(stderr, "VERSION: %s\n",req->version);
 		 		break;
 
 		}
@@ -134,12 +137,48 @@ int log_req(struct http_req *req) {
 
 int make_resp(struct http_req *req, char* base_path) {
 	
+	int fd;
+	struct stat statbuf;
+        void *mmf_ptr;
+	
+	char res_file[FILE_NAME_LEN] = "";
+	strncpy(res_file,base_path,strlen(base_path));
+	strcat(res_file,req->uri_path);
 
+	fprintf(stderr, "open file=: %s\n", res_file);		
+        if ((fd=open(res_file, O_RDONLY)) < 0) {
+                perror(res_file);
+                return 1;
+        }
+	
+        if (fstat(fd, &statbuf) < 0) {
+                perror(res_file);
+                return 1;
+        }
+	
+        if ((mmf_ptr = mmap(0, statbuf.st_size, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
+                perror("myfile");
+                return 1;
+        }
+	
+	char http_result[100];
+       	strncpy(http_result,req->version,strlen(req->version));
 
-	printf("HTTP/1.1 200 OK\r\n");
-	printf("Content-Type: text/html\r\n");
-	printf("\r\n");
-	printf("<html><body><title>Page title</title><h1>Page Header</h1></doby></html>\r\n");
+	strcat(res_file," 200 OK\r\n");
+	write(1,http_result,strlen(http_result));
+	
+	char *http_contype = "Content-Type: text/html\r\n";
+	write(1,http_contype,strlen(http_contype));
+	
+	char *header_end = "\r\n";
+	write(1,header_end,strlen(header_end));
+        
+	if(write(1,mmf_ptr,statbuf.st_size) != statbuf.st_size) {
+                perror("stdout");
+                return 1;
+        }
+        close(fd);
+        munmap(mmf_ptr,statbuf.st_size);
 	return 0;
 }
 
@@ -152,11 +191,9 @@ int main (int argc, char* argv[]) {
 		strncpy(base_path, argv[1], strlen(argv[1]));
 		strncpy(log_path, argv[2], strlen(argv[2]));
 		strcat(log_path,"/");
-		//strcat(base_path,"/"); we have it in uri_path
 	}
-	else
-	{
-		strcat(base_path,"webroo");
+	else{
+		strcat(base_path,"webroot");
 	}
 
 	strcat(log_path,log_file);
